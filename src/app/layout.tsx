@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -22,21 +23,18 @@ export const metadata: Metadata = {
   applicationName: 'Markdown Notes Sync',
   appleWebApp: {
     capable: true,
-    title: 'NotesSync', // From <meta name="apple-mobile-web-app-title" content="NotesSync" />
-    statusBarStyle: 'default', // From <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    title: 'NotesSync',
+    statusBarStyle: 'default',
   },
   formatDetection: {
-    telephone: false, // From <meta name="format-detection" content="telephone=no" />
+    telephone: false,
   },
-  themeColor: '#64B5F6', // From <meta name="theme-color" content="#64B5F6" />
+  themeColor: '#64B5F6',
   icons: {
     icon: [
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
-    // apple: [ // You can add specific apple-touch-icons here if needed, e.g.:
-    //   { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
-    // ],
   },
 };
 

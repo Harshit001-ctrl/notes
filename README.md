@@ -121,19 +121,6 @@ Markdown Notes Sync is built with an "offline-first" mindset:
 
 This robust synchronization ensures your data integrity across sessions and devices (if the backend were persistent and shared).
 
-## 💡 Contributing
 
-Contributions are welcome! If you have ideas for improvements or find a bug, please feel free to:
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
 
-## 📄 License
 
-This project is licensed under the MIT License. You can create a `LICENSE.md` file in your project root with the MIT License text if you wish.
-
----
-
-Happy Note-Taking! If you have any questions or feedback, don't hesitate to open an issue on GitHub.
