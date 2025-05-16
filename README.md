@@ -1,63 +1,8 @@
 
-# Markdown Notes Sync 📝✨
+# Markdown Notes Sync
 
-**Your go-to offline-first Markdown notes app that keeps everything in sync!**
+**It is live on - https://notes-harshit.vercel.app/ **
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- Feel free to change this if you use a different license -->
-
-<!-- TODO: If you deploy this app, add a link to your live demo here! -->
-<!-- e.g., [View Live Demo](https://your-app-url.com) -->
-
-Markdown Notes Sync is a web application designed for anyone who loves the simplicity of Markdown and needs reliable access to their notes, even without an internet connection. Create, edit, and organize your thoughts seamlessly, knowing your data is safe locally and synced to a mock backend when you're back online.
-
-<!-- TODO: Add a cool screenshot or GIF of the app in action here! -->
-<!-- For example: -->
-<!-- <p align="center"><img src="https://link_to_your_screenshot.png" width="700"></p> -->
-
-## 🚀 Core Features
-
-This app is packed with features to make your note-taking experience smooth and efficient:
-
-1.  **📝 Note Creation & Editing**:
-    *   Easily create new notes with a title and your content in Markdown.
-    *   Edit existing notes with an instant live preview.
-    *   **Autosave magic**: Changes are saved automatically in the background (debounced at 500ms) so you never lose your work.
-
-2.  **✈️ Offline Persistence**:
-    *   **Truly offline-first**: All notes are stored locally in your browser's IndexedDB.
-    *   Full functionality (create, edit, delete) is available even when you're completely offline.
-    *   Your data stays put across browser refreshes and restarts.
-
-3.  **🔄 Smart Syncing**:
-    *   **Automatic sync**: When you're online, the app automatically syncs local changes with the mock backend.
-    *   Handles new notes, updates to existing notes, and deletions.
-    *   **Conflict resolution**: Implements a "last-write-wins" strategy, prioritizing client changes for notes that haven't been synced yet.
-    *   **Clear status indicators**: Each note visually shows its sync status ("Unsynced", "Syncing...", "Synced", "Error").
-
-4.  **📶 Connectivity Awareness**:
-    *   Intelligently detects your online/offline status using browser APIs.
-    *   Provides clear UI feedback on your connection and overall sync progress.
-
-5.  **🔍 Note Listing & Searching**:
-    *   Notes are displayed neatly, sorted by the last updated time (newest first).
-    *   A handy search bar lets you quickly filter notes by title or content.
-
-6.  **✨ User Experience**:
-    *   Sleek, responsive, and accessible UI built with modern tools.
-    *   **Progressive Web App (PWA)**: Installable on your device with a service worker for offline asset caching, providing an app-like experience.
-
-## 🛠️ Tech Stack
-
-This project leverages a modern and robust set of technologies:
-
-*   **Frontend**: Next.js (App Router), React (Hooks, Context API)
-*   **Local Storage**: IndexedDB (via `idb` library for a friendlier API)
-*   **Markdown Rendering**: `react-markdown` with `remark-gfm` for GitHub Flavored Markdown
-*   **Offline Detection**: Browser's `navigator.onLine` and `online`/`offline` events
-*   **HTTP Client**: Native Fetch API
-*   **Styling**: Tailwind CSS & ShadCN UI components
-*   **PWA**: `next-pwa` for service worker generation and manifest handling
-*   **AI (Genkit)**: `genkit` and `@genkit-ai/googleai` (available for potential future AI-powered features, not core to current note-taking)
 
 ## 🏁 Getting Started
 
@@ -71,18 +16,9 @@ Ready to run the app locally? Here's how:
 ### Installation
 
 1.  **Clone the repository**:
-    ```bash
-    # Replace with your actual repository URL if you fork/clone it elsewhere
-    git clone https://github.com/your-username/markdown-notes-sync.git
-    cd markdown-notes-sync
-    ```
-
 2.  **Install dependencies**:
     ```bash
     npm install
-    # or
-    yarn install
-    ```
 
 ### Running the Application
 
@@ -92,10 +28,61 @@ Ready to run the app locally? Here's how:
     ```
     The application will typically be available at `http://localhost:9002`.
 
-2.  **(Optional) Run Genkit development server** (if you plan to work on or test Genkit flows):
-    ```bash
-    npm run genkit:dev
-    ```
+**Your go-to offline-first Markdown notes app that keeps everything in sync!**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- Feel free to change this if you use a different license -->
+
+<!-- TODO: If you deploy this app, add a link to your live demo here! -->
+<!-- e.g., [View Live Demo](https://your-app-url.com) -->
+
+Markdown Notes Sync is a web application designed for anyone who loves the simplicity of Markdown and needs reliable access to their notes, even without an internet connection. Create, edit, and organize your thoughts seamlessly, knowing your data is safe locally and synced to a mock backend when you're back online.
+
+
+
+##  Core Features
+
+This app is packed with features to make your note-taking experience smooth and efficient:
+
+1.  ** Note Creation & Editing**:
+    *   Easily create new notes with a title and your content in Markdown.
+    *   Edit existing notes with an instant live preview.
+    *   **Autosave magic**: Changes are saved automatically in the background (debounced at 500ms) so you never lose your work.
+
+2.  ** Offline Persistence**:
+    *   **Truly offline-first**: All notes are stored locally in your browser's IndexedDB.
+    *   Full functionality (create, edit, delete) is available even when you're completely offline.
+    *   Your data stays put across browser refreshes and restarts.
+
+3.  ** Smart Syncing**:
+    *   **Automatic sync**: When you're online, the app automatically syncs local changes with the mock backend.
+    *   Handles new notes, updates to existing notes, and deletions.
+    *   **Conflict resolution**: Implements a "last-write-wins" strategy, prioritizing client changes for notes that haven't been synced yet.
+    *   **Clear status indicators**: Each note visually shows its sync status ("Unsynced", "Syncing...", "Synced", "Error").
+
+4.  **📶 Connectivity Awareness**:
+    *   Intelligently detects your online/offline status using browser APIs.
+    *   Provides clear UI feedback on your connection and overall sync progress.
+
+5.  ** Note Listing & Searching**:
+    *   Notes are displayed neatly, sorted by the last updated time (newest first).
+    *   A handy search bar lets you quickly filter notes by title or content.
+
+6.  ** User Experience**:
+    *   Sleek, responsive, and accessible UI built with modern tools.
+    *   **Progressive Web App (PWA)**: Installable on your device with a service worker for offline asset caching, providing an app-like experience.
+
+## 🛠️ Tech Stack
+
+This project leverages a modern and robust set of technologies:
+  **Frontend**: Next.js ,typescript , tailwind css (App Router), React (Hooks, Context API)
+   **Local Storage**: IndexedDB (via `idb` library for a friendlier API)
+   **Markdown Rendering**: `react-markdown` with `remark-gfm` for GitHub Flavored Markdown
+   **Offline Detection**: Browser's `navigator.onLine` and `online`/`offline` events
+   **HTTP Client**: Native Fetch API
+   **Styling**: Tailwind CSS & ShadCN UI components
+   **PWA**: `next-pwa` for service worker generation and manifest handling
+
+
 
 ## ☁️ Mock API
 
