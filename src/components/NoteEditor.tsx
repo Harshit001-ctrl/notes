@@ -1,7 +1,8 @@
+
 'use client';
 
 import type { LocalNote } from '@/types';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,54 +24,45 @@ export function NoteEditor() {
     currentEditingNote,
     isEditorOpen,
     closeEditor,
-    createOrUpdateNote, // This is the debounced auto-save function from context
+    autoSaveNote,      // Renamed from createOrUpdateNote for auto-saving
+    saveCurrentNote, // New function for explicit save with toast
   } = useNotes();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [localUpdatedAt, setLocalUpdatedAt] = useState<string | undefined>();
-
+  // localUpdatedAt is not strictly needed in editor state if context handles timestamps
 
   useEffect(() => {
     if (currentEditingNote) {
       setTitle(currentEditingNote.title);
       setContent(currentEditingNote.content);
-      setLocalUpdatedAt(currentEditingNote.updatedAt);
     } else {
       // New note
       setTitle('');
       setContent('');
-      setLocalUpdatedAt(undefined);
     }
   }, [currentEditingNote, isEditorOpen]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    // Autosave is triggered by createOrUpdateNote via context which is debounced
-    createOrUpdateNote({ id: currentEditingNote?.id, title: newTitle, content, updatedAt: localUpdatedAt });
+    autoSaveNote({ title: newTitle }); // Auto-save with new title
   };
   
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
-    // Autosave
-    createOrUpdateNote({ id: currentEditingNote?.id, title, content: newContent, updatedAt: localUpdatedAt });
+    autoSaveNote({ content: newContent }); // Auto-save with new content
   };
 
   const handleSubmit = async () => {
-    // Explicit save - mainly ensures the latest state is captured if autosave hasn't fired
-    // The debounced createOrUpdateNote handles the actual saving logic.
-    // We can force one last call or rely on its existing queue.
-    // For simplicity, we'll let autosave handle it, this button primarily closes.
-    // Or, we can do an immediate save here.
-    const noteToSave: Partial<LocalNote> = {
-        id: currentEditingNote?.id, // Will be undefined for new notes, handled by createOrUpdateNote
-        title: title || 'Untitled Note',
-        content: content,
-        updatedAt: new Date().toISOString(), // Force update timestamp on explicit save
-    };
-    await createOrUpdateNote(noteToSave); // This now calls the debounced/auto-save function
+    // Explicit save using the new context function
+    await saveCurrentNote({ 
+      // Pass only fields that might have changed in the editor
+      // The ID and other essential fields are managed by currentEditingNote in context
+      title: title || (currentEditingNote?.title || 'Untitled Note'), // Use local state, fallback to context, then default
+      content: content || (currentEditingNote?.content || ''), // Use local state, fallback to context
+    });
     closeEditor();
   };
 
@@ -79,7 +71,7 @@ export function NoteEditor() {
     <Dialog open={isEditorOpen} onOpenChange={(open) => !open && closeEditor()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{currentEditingNote ? 'Edit Note' : 'Create New Note'}</DialogTitle>
+          <DialogTitle>{currentEditingNote && currentEditingNote.title ? 'Edit Note' : 'Create New Note'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4 flex-grow overflow-y-auto">
           <div className="grid gap-2">
@@ -118,7 +110,7 @@ export function NoteEditor() {
             </Button>
           </DialogClose>
           <Button type="button" onClick={handleSubmit}>
-            {currentEditingNote ? 'Save Changes' : 'Create Note'}
+            {currentEditingNote && currentEditingNote.title ? 'Save Changes' : 'Create Note'}
           </Button>
         </DialogFooter>
       </DialogContent>
