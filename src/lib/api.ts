@@ -1,3 +1,4 @@
+
 import type { Note } from '@/types';
 
 // IMPORTANT: This should be replaced with your actual mock API endpoint.
@@ -42,12 +43,23 @@ export async function deleteNoteAPI(id: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/${id}`, {
     method: 'DELETE',
   });
-  if (!response.ok) {
-    // DELETE might return 204 No Content on success, or 200 with a message.
-    // If it's not ok, and not 204, throw error.
-    if (response.status !== 204) {
-      const errorData = await response.json().catch(() => ({ message: 'Failed to delete note' }));
-      throw new Error(errorData.message || 'Failed to delete note');
-    }
+
+  // If the response is ok (e.g., 200, 204 for successful delete)
+  // OR if it's a 404 (Not Found - meaning it's already gone),
+  // we consider the operation successful or a no-op.
+  if (response.ok || response.status === 404) {
+    return; // Successful deletion or note was already deleted.
   }
+
+  // For any other error status, try to parse the message and throw.
+  // This covers actual server errors (5xx) or other unexpected client errors (4xx).
+  let errorMessage = `Failed to delete note. Status: ${response.status}`;
+  try {
+    const errorData = await response.json();
+    errorMessage = errorData.message || errorMessage;
+  } catch (e) {
+    // Ignore if response body is not JSON or empty
+  }
+  throw new Error(errorMessage);
 }
+
