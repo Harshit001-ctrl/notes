@@ -59,7 +59,7 @@ This app is packed with features to make your note-taking experience smooth and 
     *   **Conflict resolution**: Implements a "last-write-wins" strategy, prioritizing client changes for notes that haven't been synced yet.
     *   **Clear status indicators**: Each note visually shows its sync status ("Unsynced", "Syncing...", "Synced", "Error").
 
-4.  **📶 Connectivity Awareness**:
+4.  ** Connectivity Awareness**:
     *   Intelligently detects your online/offline status using browser APIs.
     *   Provides clear UI feedback on your connection and overall sync progress.
 
@@ -71,7 +71,7 @@ This app is packed with features to make your note-taking experience smooth and 
     *   Sleek, responsive, and accessible UI built with modern tools.
     *   **Progressive Web App (PWA)**: Installable on your device with a service worker for offline asset caching, providing an app-like experience.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 This project leverages a modern and robust set of technologies:
   **Frontend**: Next.js ,typescript , tailwind css (App Router), React (Hooks, Context API)
@@ -84,7 +84,7 @@ This project leverages a modern and robust set of technologies:
 
 
 
-## ☁️ Mock API
+## ☁ Mock API
 
 The application uses Next.js API Routes to simulate a backend. These API endpoints are defined in `src/app/api/notes/`:
 
@@ -95,7 +95,7 @@ The application uses Next.js API Routes to simulate a backend. These API endpoin
 
 **Important**: The data for this mock API is stored **in-memory on the server-side** (`src/app/api/notes/store.ts`). This means it will be **reset if the server restarts**. For persistent storage in a real-world scenario, you'd replace this with a proper database.
 
-## 🌐 Offline Functionality & Syncing Deep Dive
+##  Offline Functionality & Syncing Deep Dive
 
 Markdown Notes Sync is built with an "offline-first" mindset:
 
