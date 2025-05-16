@@ -1,7 +1,8 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { LocalNote, Note } from '@/types';
 import {
   getAllNotesDB,
@@ -36,6 +37,8 @@ interface NotesContextType {
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
 
+const SYNC_ERROR_COOLDOWN_MS = 5000; // 5 seconds cooldown after a major sync error
+
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
   const [notes, setNotes] = useState<LocalNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +49,9 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   const online = useOnlineStatus();
   const { toast } = useToast();
+
+  const isSyncingGuardRef = useRef(false);
+  const lastSyncErrorTimestampRef = useRef<number>(0);
 
   const loadNotesFromDB = useCallback(async () => {
     setIsLoading(true);
@@ -61,18 +67,27 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   const getNoteSyncStatus = useCallback((noteId: string): LocalNote['syncStatus'] => {
     const note = notes.find(n => n.id === noteId);
-    if (!note) return 'unsynced'; // Should not happen if note is in list
+    if (!note) return 'unsynced';
     if (isSyncing && (currentEditingNote?.id === noteId || notes.find(n => n.id === noteId && !n.synced))) return 'syncing';
     if (note.synced) return 'synced';
-    // TODO: Add more robust error state tracking per note
-    // if (note._syncError) return 'error';
+    // if (note._syncError) return 'error'; // TODO: Add more robust error state tracking per note
     return 'unsynced';
   }, [notes, isSyncing, currentEditingNote]);
   
 
   const syncNotes = useCallback(async () => {
-    if (!online || isSyncing) return;
+    const now = Date.now();
+    if (lastSyncErrorTimestampRef.current > 0 && (now - lastSyncErrorTimestampRef.current < SYNC_ERROR_COOLDOWN_MS)) {
+        console.log(`Sync skipped: in error cooldown period. Remaining: ${Math.round((SYNC_ERROR_COOLDOWN_MS - (now - lastSyncErrorTimestampRef.current))/1000)}s`);
+        return;
+    }
 
+    if (!online || isSyncingGuardRef.current) {
+      console.log(`Sync skipped: Online: ${online}, Guard Ref: ${isSyncingGuardRef.current}`);
+      return;
+    }
+
+    isSyncingGuardRef.current = true;
     setIsSyncing(true);
     toast({ title: 'Syncing...', description: 'Attempting to sync notes with the server.' });
 
@@ -86,48 +101,47 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         try {
           if (localNote._deleted) {
             await deleteNoteAPI(localNote.id);
-            await deleteNoteDB(localNote.id); // Hard delete after successful server deletion
+            await deleteNoteDB(localNote.id); 
           } else if (!localNote.synced) {
             const notePayload = { title: localNote.title, content: localNote.content, updatedAt: localNote.updatedAt };
             let upsertedNote: Note;
-            // Check if note exists on server to decide POST or PUT
             const serverVersion = serverNotes.find(sn => sn.id === localNote.id);
             if (serverVersion) {
                 upsertedNote = await updateNoteAPI(localNote.id, notePayload);
             } else {
-                // Pass the local ID if it's a new note being synced for the first time
-                upsertedNote = await createNoteAPI({ ...notePayload, id: localNote.id } as any); // API might generate its own ID or use provided
+                upsertedNote = await createNoteAPI({ ...notePayload, id: localNote.id } as any);
             }
             await updateNoteDB({ ...localNote, ...upsertedNote, synced: true, syncStatus: 'synced' });
           }
         } catch (error) {
-          console.error(`Failed to sync note ${localNote.id}:`, error);
-          await updateNoteDB({ ...localNote, syncStatus: 'error' });
-          // Individual note sync error
+          console.error(`Failed to sync individual note ${localNote.id}:`, error);
+          await updateNoteDB({ ...localNote, syncStatus: 'error' }); // Mark individual note as error
         }
       }
 
       // 3. Process server notes to update local
-      const freshLocalNotes = await getAllNotesDB(); // Re-fetch after pushes
+      const freshLocalNotes = await getAllNotesDB(); 
       for (const serverNote of serverNotes) {
         const localVersion = freshLocalNotes.find(ln => ln.id === serverNote.id);
-        if (!localVersion) { // New note from server
+        if (!localVersion) { 
           await addNoteDB({ ...serverNote, synced: true, syncStatus: 'synced' });
         } else if (new Date(serverNote.updatedAt) > new Date(localVersion.updatedAt) && localVersion.synced && !localVersion._deleted) {
-          // Server is newer, local is synced (no pending changes) and not marked for deletion
           await updateNoteDB({ ...localVersion, ...serverNote, synced: true, syncStatus: 'synced' });
         }
       }
       
       toast({ title: 'Sync Complete', description: 'Notes successfully synced.' });
+      lastSyncErrorTimestampRef.current = 0; // Reset error timestamp on successful sync
     } catch (error) {
-      console.error('Sync failed:', error);
+      console.error('Overall sync failed:', error);
       toast({ title: 'Sync Error', description: 'Could not sync notes with the server.', variant: 'destructive' });
+      lastSyncErrorTimestampRef.current = Date.now(); // Set error timestamp for cooldown
     } finally {
-      await loadNotesFromDB(); // Refresh notes list
+      await loadNotesFromDB(); 
       setIsSyncing(false);
+      isSyncingGuardRef.current = false;
     }
-  }, [online, isSyncing, toast, loadNotesFromDB]);
+  }, [online, toast, loadNotesFromDB]); // Removed setIsSyncing from here as it's a setter
 
   useEffect(() => {
     loadNotesFromDB();
@@ -139,11 +153,11 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [online, syncNotes]);
 
-  const createOrUpdateNote = async (noteDetails: Partial<LocalNote>) => {
+  const createOrUpdateNoteInternal = async (noteDetails: Partial<LocalNote>) => {
     const now = new Date().toISOString();
     let noteToSave: LocalNote;
 
-    if (noteDetails.id && currentEditingNote) { // Updating existing note
+    if (noteDetails.id && currentEditingNote) { 
       noteToSave = {
         ...currentEditingNote,
         ...noteDetails,
@@ -153,53 +167,63 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
       };
       await updateNoteDB(noteToSave);
       toast({ title: 'Note Updated', description: `'${noteToSave.title}' saved locally.` });
-    } else { // Creating new note
+    } else { 
       noteToSave = {
-        id: crypto.randomUUID(),
+        id: noteDetails.id || crypto.randomUUID(), // Use provided ID if exists (e.g. from autosave of new note)
         title: noteDetails.title || 'Untitled Note',
         content: noteDetails.content || '',
         updatedAt: now,
         synced: false,
         syncStatus: 'unsynced',
-        ...noteDetails, // allow passing other initial fields if any
+        ...noteDetails, 
       };
+      // If it's a truly new note being saved, currentEditingNote might be null.
+      // The editor might want to update its state with this new note.
+      if(!currentEditingNote && isEditorOpen){
+        setCurrentEditingNote(noteToSave); // Ensure currentEditingNote is set for new notes being saved
+      }
       await addNoteDB(noteToSave);
       toast({ title: 'Note Created', description: `'${noteToSave.title}' saved locally.` });
     }
     
-    await loadNotesFromDB(); // Refresh list
+    await loadNotesFromDB(); 
     if (online) {
-      // Non-blocking sync attempt
       syncNotes().catch(err => console.error("Post-save sync failed", err));
     }
-    return noteToSave;
+    // The function needs to return something for the await in handleAutoSave.
+    // Since the original autosave logic was about side effects, a void promise is fine.
+    // Or return the noteToSave if it's useful. For now, void.
   };
   
-  const debouncedCreateOrUpdateNote = useCallback(debounce(createOrUpdateNote, 500), [currentEditingNote, online, loadNotesFromDB, syncNotes, toast]);
+  // Debounce dependencies: `online` and `syncNotes` are stable or change infrequently.
+  // `loadNotesFromDB` is stable. `toast` is stable.
+  // `currentEditingNote` is the main varying dependency for the *creation* of the debounced function.
+  const debouncedCreateOrUpdateNote = useCallback(debounce(createOrUpdateNoteInternal, 750), [currentEditingNote, online, loadNotesFromDB, syncNotes, toast]);
 
 
   const handleAutoSave = useCallback(async (updatedFields: Partial<LocalNote>) => {
-    if (!currentEditingNote && !isEditorOpen) return; // Not editing or editor not for new note
+    let noteDataForAutosave: Partial<LocalNote>;
 
-    const baseNote = currentEditingNote || { id: undefined, title: '', content: '' }; // Handle new note case for autosave
-    
-    const noteDataForAutosave = {
-        ...baseNote,
-        ...updatedFields,
-    };
-
-    // If it's a new note being auto-saved for the first time, it needs an ID to be "updatable" by debounce
-    // This is tricky. Autosave should ideally work on an existing draft.
-    // For a new note, the first "autosave" might be the explicit creation.
-    // Let's assume autosave works primarily on `currentEditingNote` which implies it exists or is being created.
     if (currentEditingNote) {
-      setCurrentEditingNote(prev => prev ? {...prev, ...updatedFields, updatedAt: new Date().toISOString(), synced: false, syncStatus: 'unsynced'} : null);
-      await debouncedCreateOrUpdateNote(noteDataForAutosave);
-    } else if (isEditorOpen && !currentEditingNote) { // New note scenario
-        // For a brand new note, autosave might be complex without an initial ID.
-        // A simpler approach is to rely on explicit save for new notes, or create a draft ID immediately.
-        // For now, let's ensure currentEditingNote is set when editor opens for new.
+      noteDataForAutosave = {
+        ...currentEditingNote,
+        ...updatedFields,
+      };
+       setCurrentEditingNote(prev => prev ? {...prev, ...updatedFields, updatedAt: new Date().toISOString(), synced: false, syncStatus: 'unsynced'} : null);
+    } else if (isEditorOpen && !currentEditingNote ) { // New note scenario in editor
+        // Create a temporary structure for the new note being typed
+        noteDataForAutosave = {
+            // id: undefined, // No ID yet, createOrUpdateNoteInternal will generate
+            title: updatedFields.title || '',
+            content: updatedFields.content || '',
+            ...updatedFields, // allow passing other initial fields if any
+        };
+        // Don't call setCurrentEditingNote here for a new note before it's saved,
+        // let createOrUpdateNoteInternal handle setting it if it creates the note.
+    } else {
+        return; // Not editing or editor not for new note.
     }
+    await debouncedCreateOrUpdateNote(noteDataForAutosave);
 
   }, [currentEditingNote, isEditorOpen, debouncedCreateOrUpdateNote]);
 
@@ -207,7 +231,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   const deleteNote = async (id: string) => {
     await markNoteAsDeletedDB(id);
     toast({ title: 'Note Deleted', description: 'Note marked for deletion locally.' });
-    await loadNotesFromDB(); // Refresh list
+    await loadNotesFromDB(); 
     if (online) {
       syncNotes().catch(err => console.error("Post-delete sync failed", err));
     }
@@ -219,19 +243,33 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   const openEditor = async (noteId?: string) => {
     if (noteId) {
-      const note = await getNoteDB(noteId); // Fetch fresh from DB
+      const note = await getNoteDB(noteId); 
       setCurrentEditingNote(note || null);
     } else {
-      // For new note, create a temporary client-side representation or handle in NoteEditor
-      setCurrentEditingNote(null); // Indicates new note mode
+      // For a new note, explicitly create a placeholder.
+      // This placeholder will be updated by autosave and eventually saved.
+      const newPlaceholderNote: LocalNote = {
+        id: crypto.randomUUID(), // Assign a temporary ID for autosave to work on
+        title: '',
+        content: '',
+        updatedAt: new Date().toISOString(),
+        synced: false,
+        syncStatus: 'unsynced',
+      };
+      setCurrentEditingNote(newPlaceholderNote);
     }
     setIsEditorOpen(true);
   };
 
   const closeEditor = () => {
+    // Before closing, ensure any pending debounced save is flushed
+    // This is tricky with debounce, as flushing isn't standard.
+    // The explicit save button in NoteEditor handles the final save.
+    // Or, we could trigger the debounced function one last time with current state if needed.
+    // For now, rely on the explicit save or the natural debounce timeout.
+    
     setIsEditorOpen(false);
     setCurrentEditingNote(null);
-    // Optional: Trigger sync if there were pending changes on the closing note
     if (online) syncNotes().catch(err => console.error("Post-editor-close sync failed", err));
   };
 
@@ -244,7 +282,7 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
         online,
         searchTerm,
         setSearchTerm,
-        createOrUpdateNote: handleAutoSave, // Use handleAutoSave for editor changes which then calls debounced version
+        createOrUpdateNote: handleAutoSave, 
         deleteNote,
         getNoteById,
         currentEditingNote,
@@ -267,3 +305,4 @@ export const useNotes = (): NotesContextType => {
   }
   return context;
 };
+
