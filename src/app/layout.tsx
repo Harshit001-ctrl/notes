@@ -35,19 +35,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="NotesSync" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-config" content="/browserconfig.xml" /> {/* Optional: if you have one */}
+        <meta name="msapplication-config" content="/browserconfig.xml" />
         <meta name="msapplication-TileColor" content="#64B5F6" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#64B5F6" />
-
-        {/* Add to homescreen for Safari on iOS */}
-        {/* These icons would typically be in the public folder */}
-        {/* <link rel="apple-touch-icon" href="/icons/touch-icon-iphone.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/touch-icon-ipad.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/touch-icon-iphone-retina.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/touch-icon-ipad-retina.png" /> */}
-
-        {/* Basic PWA icons setup */}
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
       </head>
