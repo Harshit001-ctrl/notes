@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { LocalNote } from '@/types';
@@ -34,9 +35,11 @@ export function NoteCard({ note }: NoteCardProps) {
   const renderSyncBadge = () => {
     switch (syncStatus) {
       case 'synced':
-        return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="mr-1 h-3 w-3" /> Synced</Badge>;
+        // Using default variant which maps to primary color (soft blue)
+        return <Badge variant="default"><CheckCircle className="mr-1 h-3 w-3" /> Synced</Badge>;
       case 'syncing':
-        return <Badge variant="outline" className="text-blue-500 border-blue-500"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Syncing...</Badge>;
+        // Using outline variant, styled with accent color (orange) for syncing status
+        return <Badge variant="outline" className="text-accent border-accent"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Syncing...</Badge>;
       case 'error':
         return <Badge variant="destructive"><AlertCircle className="mr-1 h-3 w-3" /> Error</Badge>;
       case 'unsynced':
@@ -86,3 +89,4 @@ export function NoteCard({ note }: NoteCardProps) {
     </Card>
   );
 }
+
