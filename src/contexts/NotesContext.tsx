@@ -12,7 +12,7 @@ import {
   markNoteAsDeletedDB,
   getNoteDB,
 } from '@/lib/db';
-import { fetchNotesAPI, createNoteAPI, updateNoteAPI, deleteNoteAPI } from '@/lib/api';
+import { fetchNotesAPI, createNoteAPI, updateNoteAPI, deleteNoteAPI, type NoteCreationPayload } from '@/lib/api';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useToast } from '@/hooks/use-toast';
 import { debounce } from '@/lib/utils';
@@ -101,13 +101,21 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
             await deleteNoteAPI(localNote.id);
             await deleteNoteDB(localNote.id); 
           } else if (!localNote.synced) {
-            const notePayload = { title: localNote.title, content: localNote.content, updatedAt: localNote.updatedAt };
+            const notePayload: NoteCreationPayload = { 
+              id: localNote.id, // id is now part of NoteCreationPayload
+              title: localNote.title, 
+              content: localNote.content, 
+              updatedAt: localNote.updatedAt 
+            };
             let upsertedNote: Note;
             const serverVersion = serverNotes.find(sn => sn.id === localNote.id);
             if (serverVersion) {
-                upsertedNote = await updateNoteAPI(localNote.id, notePayload);
+                // For update, we might not need to send the full localNote.id if the API path includes it
+                // Assuming updateNoteAPI's second arg matches Partial<Omit<Note, 'id'>>
+                const updatePayload = { title: localNote.title, content: localNote.content, updatedAt: localNote.updatedAt };
+                upsertedNote = await updateNoteAPI(localNote.id, updatePayload);
             } else {
-                upsertedNote = await createNoteAPI({ ...notePayload, id: localNote.id } as any);
+                upsertedNote = await createNoteAPI(notePayload);
             }
             await updateNoteDB({ ...localNote, ...upsertedNote, synced: true, syncStatus: 'synced' });
           }

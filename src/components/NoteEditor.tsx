@@ -64,7 +64,7 @@ export function NoteEditor() {
 
   return (
     <Dialog open={isEditorOpen} onOpenChange={(open) => !open && closeEditor()}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col"> {/* Increased max-width */}
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col"> {/* Changed max-width to 2xl */}
         <DialogHeader>
           <DialogTitle>{currentEditingNote && currentEditingNote.title ? 'Edit Note' : 'Create New Note'}</DialogTitle>
         </DialogHeader>

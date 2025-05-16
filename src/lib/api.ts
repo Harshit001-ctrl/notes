@@ -13,7 +13,11 @@ export async function fetchNotesAPI(): Promise<Note[]> {
   return response.json();
 }
 
-export async function createNoteAPI(noteData: Omit<Note, 'id' | 'synced'>): Promise<Note> {
+// Define a more specific type for the payload, allowing id to be optional
+export type NoteCreationPayload = Omit<Note, 'synced'>;
+
+
+export async function createNoteAPI(noteData: NoteCreationPayload): Promise<Note> {
   const response = await fetch(API_BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -62,4 +66,3 @@ export async function deleteNoteAPI(id: string): Promise<void> {
   }
   throw new Error(errorMessage);
 }
-
