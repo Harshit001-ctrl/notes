@@ -15,7 +15,7 @@ export function AppHeader() {
         {/* Left: Logo/Title */}
         <div className="flex items-center gap-2 text-lg font-semibold text-primary flex-shrink-0">
           <BookMarked className="h-6 w-6" />
-          <span>Notes Offline</span>
+          <span>Notes Offlines</span>
         </div>
 
         {/* Right: Actions */}
