@@ -24,20 +24,18 @@ export function NoteEditor() {
     currentEditingNote,
     isEditorOpen,
     closeEditor,
-    autoSaveNote,      // Renamed from createOrUpdateNote for auto-saving
-    saveCurrentNote, // New function for explicit save with toast
+    autoSaveNote,
+    saveCurrentNote,
   } = useNotes();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  // localUpdatedAt is not strictly needed in editor state if context handles timestamps
 
   useEffect(() => {
     if (currentEditingNote) {
       setTitle(currentEditingNote.title);
       setContent(currentEditingNote.content);
     } else {
-      // New note
       setTitle('');
       setContent('');
     }
@@ -46,22 +44,19 @@ export function NoteEditor() {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    autoSaveNote({ title: newTitle }); // Auto-save with new title
+    autoSaveNote({ title: newTitle });
   };
   
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
-    autoSaveNote({ content: newContent }); // Auto-save with new content
+    autoSaveNote({ content: newContent });
   };
 
   const handleSubmit = async () => {
-    // Explicit save using the new context function
     await saveCurrentNote({ 
-      // Pass only fields that might have changed in the editor
-      // The ID and other essential fields are managed by currentEditingNote in context
-      title: title || (currentEditingNote?.title || 'Untitled Note'), // Use local state, fallback to context, then default
-      content: content || (currentEditingNote?.content || ''), // Use local state, fallback to context
+      title: title || (currentEditingNote?.title || 'Untitled Note'),
+      content: content || (currentEditingNote?.content || ''),
     });
     closeEditor();
   };
@@ -69,11 +64,13 @@ export function NoteEditor() {
 
   return (
     <Dialog open={isEditorOpen} onOpenChange={(open) => !open && closeEditor()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col"> {/* Increased max-width */}
         <DialogHeader>
           <DialogTitle>{currentEditingNote && currentEditingNote.title ? 'Edit Note' : 'Create New Note'}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4 flex-grow overflow-y-auto">
+        {/* Main content area: flex-col for title and then the editor/preview row. It handles overall scrolling. */}
+        <div className="flex flex-col gap-4 py-4 flex-grow overflow-y-auto">
+          {/* Title Input */}
           <div className="grid gap-2">
             <Label htmlFor="title" className="text-left">Title</Label>
             <Input
@@ -84,24 +81,40 @@ export function NoteEditor() {
               className="text-lg"
             />
           </div>
-          <div className="grid gap-2 flex-grow">
-            <Label htmlFor="content" className="text-left">Content (Markdown)</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={handleContentChange}
-              placeholder="Write your note here..."
-              className="min-h-[200px] flex-grow resize-none"
-            />
+
+          {/* Editor and Preview Section: This row will grow vertically. */}
+          <div className="flex flex-row gap-4 flex-grow">
+            {/* Left Column: Editor */}
+            <div className="flex flex-col gap-2 flex-1"> {/* flex-1 for 50% width */}
+              <Label htmlFor="content" className="text-left">Content (Markdown)</Label>
+              <Textarea
+                id="content"
+                value={content}
+                onChange={handleContentChange}
+                placeholder="Write your note here..."
+                className="flex-grow resize-none" // flex-grow makes textarea use available vertical space
+              />
+            </div>
+
+            {/* Right Column: Preview */}
+            <div className="flex flex-col gap-2 flex-1"> {/* flex-1 for 50% width */}
+              <Label htmlFor="preview-area" className="text-left">Preview</Label>
+              <div 
+                id="preview-area" 
+                className="p-4 border rounded-md bg-muted/50 flex-grow overflow-hidden" // flex-grow for height, overflow-hidden to prevent its own scrollbar
+              >
+                { (title || content) ? (
+                  <article className="prose prose-sm dark:prose-invert max-w-none h-full overflow-y-auto"> {/* Article content can scroll if needed */}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                  </article>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <span>Preview will appear here</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          { (title || content) && (
-             <div className="mt-4 p-4 border rounded-md bg-muted/50 max-h-60 overflow-y-auto">
-                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Preview</h3>
-                <article className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-                </article>
-             </div>
-          )}
         </div>
         <DialogFooter>
           <DialogClose asChild>
