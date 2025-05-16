@@ -68,9 +68,7 @@ export function NoteEditor() {
         <DialogHeader>
           <DialogTitle>{currentEditingNote && currentEditingNote.title ? 'Edit Note' : 'Create New Note'}</DialogTitle>
         </DialogHeader>
-        {/* Main content area: flex-col for title and then the editor/preview row. It handles overall scrolling. */}
         <div className="flex flex-col gap-4 py-4 flex-grow overflow-y-auto">
-          {/* Title Input */}
           <div className="grid gap-2">
             <Label htmlFor="title" className="text-left">Title</Label>
             <Input
@@ -82,29 +80,25 @@ export function NoteEditor() {
             />
           </div>
 
-          {/* Editor and Preview Section: This row will grow vertically. */}
           <div className="flex flex-row gap-4 flex-grow">
-            {/* Left Column: Editor */}
-            <div className="flex flex-col gap-2 flex-1"> {/* flex-1 for 50% width */}
+            <div className="flex flex-col gap-2 flex-1">
               <Label htmlFor="content" className="text-left">Content (Markdown)</Label>
               <Textarea
                 id="content"
                 value={content}
                 onChange={handleContentChange}
                 placeholder="Write your note here..."
-                className="flex-grow resize-none" // flex-grow makes textarea use available vertical space
-              />
+                className="flex-grow resize-none" />
             </div>
 
-            {/* Right Column: Preview */}
-            <div className="flex flex-col gap-2 flex-1"> {/* flex-1 for 50% width */}
+            <div className="flex flex-col gap-2 flex-1">
               <Label htmlFor="preview-area" className="text-left">Preview</Label>
               <div 
                 id="preview-area" 
-                className="p-4 border rounded-md bg-muted/50 flex-grow overflow-hidden" // flex-grow for height, overflow-hidden to prevent its own scrollbar
+                className="p-4 border rounded-md bg-muted/50 flex-grow overflow-hidden" 
               >
                 { (title || content) ? (
-                  <article className="prose prose-sm dark:prose-invert max-w-none h-full overflow-y-auto"> {/* Article content can scroll if needed */}
+                  <article className="prose prose-sm dark:prose-invert max-w-none h-full overflow-y-auto">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                   </article>
                 ) : (

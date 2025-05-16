@@ -17,13 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Markdown Notes Sync',
+  title: 'Harshit Task Notes',
   description: 'A Markdown-based Notes Application that works offline and syncs data.',
   manifest: '/manifest.json',
-  applicationName: 'Markdown Notes Sync',
+  applicationName: 'Harshit Task Notes',
   appleWebApp: {
     capable: true,
-    title: 'NotesSync',
+    title: 'Harshit Task Notes',
     statusBarStyle: 'default',
   },
   formatDetection: {

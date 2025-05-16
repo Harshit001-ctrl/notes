@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useNotes } from '@/contexts/NotesContext';
-import { NoteCard } from './NoteCard';
-import { Skeleton } from './ui/skeleton';
+import { useNotes } from "@/contexts/NotesContext";
+import { NoteCard } from "./NoteCard";
+import { Skeleton } from "./ui/skeleton";
 
 export function NoteList() {
   const { notes, isLoading, searchTerm } = useNotes();
 
   const filteredNotes = notes.filter(
     (note) =>
-      !note._deleted && // Do not show notes marked for deletion
+      !note._deleted &&
       (note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchTerm.toLowerCase()))
+        note.content.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (isLoading) {
@@ -28,7 +28,9 @@ export function NoteList() {
     return (
       <div className="text-center py-12">
         <p className="text-xl text-muted-foreground">
-          {searchTerm ? 'No notes match your search.' : 'No notes yet. Create one!'}
+          {searchTerm
+            ? "No notes match your search."
+            : "No notes yet. Create one!"}
         </p>
       </div>
     );
@@ -57,5 +59,5 @@ function CardSkeleton() {
         <Skeleton className="h-6 w-20" />
       </div>
     </div>
-  )
+  );
 }

@@ -3,25 +3,25 @@ import { NextResponse } from 'next/server';
 import type { Note } from '@/types';
 import { notes } from './store'; // Use shared store
 
-// GET /api/notes - fetch all notes
+// fetch all notes
 export async function GET() {
   return NextResponse.json(notes);
 }
 
-// POST /api/notes - create a new note
+// create a new note
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { title, content, id: providedId } = body;
 
-    if (!title || typeof title !== 'string' || (content === undefined || typeof content !== 'string') ) { // content can be empty string
+    if (!title || typeof title !== 'string' || (content === undefined || typeof content !== 'string') ) { 
       return NextResponse.json({ message: 'Title and content are required parameters' }, { status: 400 });
     }
     
     const id = providedId || crypto.randomUUID();
 
     const existingNoteIndex = notes.findIndex(note => note.id === id);
-    if (existingNoteIndex > -1 && providedId) { // If ID was provided and exists, treat as update (upsert)
+    if (existingNoteIndex > -1 && providedId) {
         const updatedNote: Note = {
             ...notes[existingNoteIndex],
             title,
@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
     
     // If ID is new or no ID provided (generate new one)
     if (notes.some(note => note.id === id)) {
-      // This case should ideally not happen if UUIDs are unique and client correctly manages new vs existing
       return NextResponse.json({ message: 'Note with this ID already exists (generated ID conflict)' }, { status: 409 });
     }
 

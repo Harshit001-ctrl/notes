@@ -35,10 +35,8 @@ export function NoteCard({ note }: NoteCardProps) {
   const renderSyncBadge = () => {
     switch (syncStatus) {
       case 'synced':
-        // Using default variant which maps to primary color (soft blue)
         return <Badge variant="default"><CheckCircle className="mr-1 h-3 w-3" /> Synced</Badge>;
       case 'syncing':
-        // Using outline variant, styled with accent color (orange) for syncing status
         return <Badge variant="outline" className="text-accent border-accent"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Syncing...</Badge>;
       case 'error':
         return <Badge variant="destructive"><AlertCircle className="mr-1 h-3 w-3" /> Error</Badge>;
